@@ -5,6 +5,7 @@ class Analytics:
     def __init__(self, logger):
         self._lock = threading.Lock()
         self._data = {}
+        self._queue_size = 0
         self.logger = logger
 
     def mark_busy(self, worker_id, number):
@@ -14,7 +15,7 @@ class Analytics:
                 "number": number,
                 "done": False
             }
-            self.logger(f"задание из очереди направлено на Сервер {worker_id}")
+            self.logger(f"задание {number} из очереди направлено на Сервер {worker_id}")
 
     def mark_free(self, worker_id):
         with self._lock:
@@ -25,7 +26,10 @@ class Analytics:
             }
             self.logger(f"Сервер {worker_id} свободен")
 
-    def get_data(self):
+    def set_queue_size(self, size):
         with self._lock:
-            # Возвращаем копию чтобы main мог читать без блокирования
-            return dict(self._data)
+            self._queue_size = size
+
+    def get_data(self) -> (dict, int):
+        with self._lock:
+            return dict(self._data), self._queue_size

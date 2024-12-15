@@ -16,11 +16,11 @@ from app.worker import worker
 
 def start(initial_number):
     command_buffer, layout, log_area, style, data_display = make_ui()
-
+    default_priority = 99
     logs = []
     logger = get_logger(logs, log_area)
     analitics = Analytics(logger)
-    queue = Queue(logger)
+    queue = Queue(analitics)
 
     # Функция обновления данных на экране
     def update_data_display():
@@ -52,13 +52,22 @@ def start(initial_number):
         command = buff.text.strip()
         buff.text = ""  # очищаем поле ввода после команды
         if command.startswith("add "):
-            # извлекаем число
-            try:
-                num = int(command.split(" ", 1)[1])
-                data.append(num)
-                update_data_display()
-            except ValueError:
-                pass
+            parts = command.split(" ")
+            if len(parts) == 3:
+                try:
+                    num = int(parts[1])
+                    priority = int(parts[2])
+                    queue.push(priority, num)
+                    update_data_display()
+                except ValueError:
+                    pass
+            elif len(parts) == 2:
+                try:
+                    num = int(parts[1])
+                    queue.push(default_priority, num)
+                    update_data_display()
+                except ValueError:
+                    pass
         elif command == "exit":
             app.exit()
 
@@ -83,6 +92,7 @@ def start(initial_number):
 
     app.run()
     # graceful shutdown
+    queue.set_shutdown()
     for stop_event in stop_events:
         stop_event.set()
 
@@ -135,7 +145,7 @@ def make_ui():
 
 
 def calculate_analysis(analytics: Analytics):
-    data = analytics.get_data()
+    data, queue_size = analytics.get_data()
 
     result = []
     for worker_id in sorted(data.keys()):
@@ -145,8 +155,9 @@ def calculate_analysis(analytics: Analytics):
             s = f"сервер {worker_id}: выполняет задание (осталось {elapsed:.2f} сек.)"
             result.append(s)
         else:
-            s1 = f"Сервер {worker_id}: пусто"
+            s1 = f"сервер {worker_id}: пусто"
             result.append(s1)
+    result.append(f"в очереди {queue_size} элементов\n")
     return result
 
 def get_logger(logs, log_area):
