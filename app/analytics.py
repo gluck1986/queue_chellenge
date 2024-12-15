@@ -1,5 +1,6 @@
-import time
 import threading
+import time
+
 
 class Analytics:
     def __init__(self, logger):

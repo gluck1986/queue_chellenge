@@ -28,7 +28,7 @@ class Queue:
             # Если heap пуст и shutdown установлен – вернуть None
             if not self.heap and self.shutdown:
                 return None
-            self.analytics.set_queue_size(len(self.heap)-1)
+            self.analytics.set_queue_size(len(self.heap) - 1)
             # Иначе извлечь элемент
             return int(heapq.heappop(self.heap)[2])
 
@@ -36,4 +36,3 @@ class Queue:
         with self.lock:
             self.shutdown = True
             self.condition.notify_all()
-

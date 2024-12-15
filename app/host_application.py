@@ -31,6 +31,7 @@ def start(initial_number):
     update_data_display()
 
     stop_refresh_event = threading.Event()
+
     # Функция, которая будет выполняться в потоке и раз в секунду обновлять экран
     def refresh_loop():
         while not stop_refresh_event.is_set():
@@ -56,7 +57,19 @@ def start(initial_number):
             if len(parts) == 3:
                 try:
                     num = int(parts[1])
+                    if num > 200:
+                        logger("отказ, время слишком велико, максимум 200сек")
+                        return
+                    if num < 1:
+                        logger("отказ, время слишком мало, минимум 1 сек")
+                        return
                     priority = int(parts[2])
+                    if priority > 200:
+                        logger("отказ, значение приоритета слишком велико максимум 200")
+                        return
+                    if priority < 0:
+                        logger("отказ, значение приоритета слишком мало минимум 0")
+                        return
                     queue.push(priority, num)
                     update_data_display()
                 except ValueError:
@@ -64,6 +77,12 @@ def start(initial_number):
             elif len(parts) == 2:
                 try:
                     num = int(parts[1])
+                    if num > 200:
+                        logger("отказ, время слишком велико, максимум 200сек")
+                        return
+                    if num < 1:
+                        logger("отказ, время слишком мало, минимум 1 сек")
+                        return
                     queue.push(default_priority, num)
                     update_data_display()
                 except ValueError:
@@ -160,8 +179,10 @@ def calculate_analysis(analytics: Analytics):
     result.append(f"в очереди {queue_size} элементов\n")
     return result
 
+
 def get_logger(logs, log_area):
-    return lambda line : add_log_line(logs, log_area, line)
+    return lambda line: add_log_line(logs, log_area, line)
+
 
 def add_log_line(logs, log_area, line: str):
     logs.append(line)
